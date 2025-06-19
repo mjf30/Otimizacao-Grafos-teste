@@ -9,6 +9,14 @@ using namespace std;
 
 typedef long long ll;
 
+int itens, quant_conj, capacidade;
+vector<int> lucro,peso; //Lucro e peso do item i
+int lim_conj, penalidade_conj, itens_conj;
+vector<vector<int> > conj; //Lista de conjunto que o item i pertence (conj[i] = lista)
+vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do conjunto i
+
+//Função meta heuristica
+
 signed main(){
     //Leitura dos arquivos
     const int cenarios = 4;
@@ -24,38 +32,41 @@ signed main(){
                     string diretorio_arquivo = "instances/scenario"+to_string(s_pasta)+"/"+ss_pasta+to_string(s_pasta)+"/"+sss_pasta+"/"+"kpfs_" + to_string(i)+ ".txt";
                     ifstream arquivo(diretorio_arquivo);
                     if (!(arquivo.is_open())) {
+                        //Cenário 1, correlated,500, kpfs_2 não existe
+                        if(diretorio_arquivo == "instances/scenario1/correlated_sc1/500/kpfs_2.txt") continue;
                         cout << "Erro ao abrir o arquivo: " << diretorio_arquivo << endl;continue;
                     }
 
                     //Início da leitura
                     //cout << "Estou lendo o arquivo:" << diretorio_arquivo << endl;
-                    int itens, quant_conj, capacidade; arquivo >> itens >> quant_conj >> capacidade;
+                    arquivo >> itens >> quant_conj >> capacidade;
     
-                    vector<int> lucro(itens),peso(itens); //Lucro e peso do item i
+                    lucro.assign(itens,0);peso.assign(itens,0);
+                    
                     for(int j = 0; j < itens; j++) arquivo >> lucro[j];
                     for(int j = 0; j < itens; j++) arquivo >> peso[j];
         
-                    int lim_conj, penalidade_conj, itens_conj;
-                    vector<vector<int> > conj(itens); //Lista de conjunto que o item i pertence (conj[i] = lista)
-                    vector<pair<int,int> > inf_conj(quant_conj);//(Limite de itens na solução,Penalidade) do conjunto i
-
+                    conj.assign(itens,vector<int>()); inf_conj.assign(quant_conj,make_pair(0,0));
                     for(int j = 0; j < quant_conj; j++){
                         arquivo >> lim_conj >> penalidade_conj >> itens_conj;
-                        inf_conj[j] = make_pair(lim_conj,penalidade_conj);
+                        inf_conj[j].first = lim_conj; inf_conj[j].second = penalidade_conj;
         
                         for(int k = 0; k < itens_conj; k++){
                             int item; arquivo >> item;
                             conj[item].push_back(j);
                         }
                     }
-
                     //Fim na leitura
 
+                    //Calcular o tempo
+                    
                     //Chamada da função
+                    //int sol = meta_her();
+
+                    //Cout com resultados
                 }
             }
         }
     }
-
     return 0;
 }
