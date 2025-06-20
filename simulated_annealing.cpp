@@ -69,11 +69,11 @@ int Simulated_Annealing(){
         temperature = temperature*alpha;
     };
 
-    time_t iniTime = time(NULL);
+    auto start = chrono::high_resolution_clock::now();
 
-    time_t agora = time(NULL);
-    // while(temperature > 1e-7){
-    while(difftime(time(NULL), iniTime) < tempoLimite){
+    auto agora = chrono::high_resolution_clock::now();
+    // // while(temperature > 1e-7){
+    while((agora - start).count() < tempoLimite){
         bool ok = true;
         while(ok){
             int itemFlip = uid(rng)%itens;
@@ -120,16 +120,17 @@ int Simulated_Annealing(){
                         somaPenalidade -= inf_conj[currConj].second;
                     }
                 }
+                ok = false;
             }
             else continue;
         }
 
         GetTemperature();
+        agora = chrono::high_resolution_clock::now();
     }
 
     return best;
 }
-
 
 signed main(){
     //Leitura dos arquivos
