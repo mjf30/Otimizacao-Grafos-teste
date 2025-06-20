@@ -1,9 +1,10 @@
+#include "bits/stdc++.h"
 #include <iostream>
 #include <fstream>     
 #include <string>      
 #include <vector>      
 #include <utility>
-#include <time.h>
+#include <ctime>
 
 using namespace std;
 
@@ -12,10 +13,120 @@ typedef long long ll;
 int itens, quant_conj, capacidade;
 vector<int> lucro,peso; //Lucro e peso do item i
 int lim_conj, penalidade_conj, itens_conj;
-vector<vector<int> > conj; //Lista de conjunto que o item i pertence (conj[i] = lista)
+vector<vector<int> > conju; //Lista de conjunto que o item i pertence (conj[i] = lista)
 vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do conjunto i
 
+const int tempoLimite = 2;
+const double alpha = 0.99999;
+const double _div = INT_MAX;
+
+
 //Função meta heuristica
+
+mt19937 rng((int) std::chrono::steady_clock::now().time_since_epoch().count());
+
+int Simulated_Annealing(){
+
+    bitset<1000> includedItems;
+
+    int somaValor = 0, somaPenalidade = 0, somaPeso = 0;
+    vector<int> itemsPorConj(quant_conj, 0);
+
+    // Começa com conjunto aleatório
+
+    uniform_int_distribution<int> uid(0, INT_MAX);
+    vector<int> perm(itens);
+    for(int i = 0; i < itens; i++) perm[i] = i;
+
+    random_shuffle(perm.begin(), perm.end());
+
+    for(int currItem: perm){
+        int incluso = uid(rng)%2;
+
+        if(incluso){
+            if(peso[currItem] + somaPeso > capacidade) continue;
+            includedItems[currItem] = 1;
+            somaPeso += peso[currItem];
+            somaValor += lucro[currItem];
+            for(int currConj: conju[currItem]){
+                itemsPorConj[currConj]++;
+                int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
+                if(diff <= 0) continue;
+                somaPenalidade += inf_conj[currConj].second;
+            }
+        }
+    }
+
+    // aqui começa o algoritmo
+
+    int best = somaValor - somaPenalidade;
+
+    double temperature = 1e9;
+
+    auto GetTemperature = [&](){
+        temperature = temperature*alpha;
+    };
+
+    time_t iniTime = time(NULL);
+
+    time_t agora = time(NULL);
+    while(temperature > 1e-7){
+    // while(difftime(time(NULL), iniTime) < tempoLimite){
+        bool ok = true;
+        while(ok){
+            int itemFlip = uid(rng)%itens;
+            int novoLucro = somaValor - somaPenalidade;
+            if(includedItems[itemFlip]){
+                novoLucro -= lucro[itemFlip];
+                for(int currConj: conju[itemFlip]){
+                    int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
+                    if(diff <= 0) continue;
+                    novoLucro += inf_conj[currConj].second;
+                }
+            }
+            else{
+                if(somaPeso + peso[itemFlip] > capacidade) continue;
+                novoLucro += lucro[itemFlip];
+                for(int currConj: conju[itemFlip]){
+                    int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                    if(diff <= 0) continue;
+                    novoLucro -= inf_conj[currConj].second;
+                }
+            }
+
+            int delta = novoLucro - (somaValor - somaPenalidade);
+            best = max(best, novoLucro);
+
+            if(delta > 0 || (uid(rng) / _div) > exp((delta)/temperature)){
+                if(includedItems[itemFlip]){
+                    includedItems[itemFlip] = 0;
+                    somaPeso -= peso[itemFlip];
+                    somaValor -= lucro[itemFlip];
+                    for(int currConj: conju[itemFlip]){
+                        int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
+                        if(diff <= 0) continue;
+                        somaPenalidade += inf_conj[currConj].second;
+                    }
+                }
+                else{
+                    includedItems[itemFlip] = 1;
+                    somaPeso += peso[itemFlip];
+                    somaValor += lucro[itemFlip];
+                    for(int currConj: conju[itemFlip]){
+                        int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                        if(diff <= 0) continue;
+                        somaPenalidade -= inf_conj[currConj].second;
+                    }
+                }
+            }
+            else continue;
+        }
+
+        GetTemperature();
+    }
+
+    return best;
+}
 
 signed main(){
     //Leitura dos arquivos
@@ -46,14 +157,14 @@ signed main(){
                     for(int j = 0; j < itens; j++) arquivo >> lucro[j];
                     for(int j = 0; j < itens; j++) arquivo >> peso[j];
         
-                    conj.assign(itens,vector<int>()); inf_conj.assign(quant_conj,make_pair(0,0));
+                    conju.assign(itens,vector<int>()); inf_conj.assign(quant_conj,make_pair(0,0));
                     for(int j = 0; j < quant_conj; j++){
                         arquivo >> lim_conj >> penalidade_conj >> itens_conj;
                         inf_conj[j].first = lim_conj; inf_conj[j].second = penalidade_conj;
         
                         for(int k = 0; k < itens_conj; k++){
                             int item; arquivo >> item;
-                            conj[item].push_back(j);
+                            conju[item].push_back(j);
                         }
                     }
                     //Fim na leitura
