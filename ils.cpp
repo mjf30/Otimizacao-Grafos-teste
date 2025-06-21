@@ -25,6 +25,8 @@ mt19937_64 rng((int) std::chrono::steady_clock::now().time_since_epoch().count()
 const double tempoLimite = 0.5;
 double alpha = 0.7;
 
+int iterationsWithoutIncreasing = 0;
+
 //Função meta-heurística
 
 int ILS(){
@@ -159,12 +161,13 @@ int ILS(){
             somaPeso += peso[currItem];
         }
     }
-    
+
     agora = chrono::high_resolution_clock::now();
 
     iter = 0;
 
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing > 50){
+        int OLD = best;
         iter++;
 
         bitset<1000> base = ilsItems;
@@ -278,6 +281,9 @@ int ILS(){
                 somaPeso = old_somaPeso;
             }
         }
+
+        if(best == OLD) iterationsWithoutIncreasing++;
+        else iterationsWithoutIncreasing = 0;
     }
 
 

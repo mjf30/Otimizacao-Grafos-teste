@@ -25,6 +25,8 @@ mt19937_64 rng((int) std::chrono::steady_clock::now().time_since_epoch().count()
 const double tempoLimite = 0.5;
 double alpha = 0.7;
 
+int iterationsWithoutIncreasing = 0;
+
 //Função meta-heurística
 
 int GRASP(){
@@ -46,7 +48,8 @@ int GRASP(){
     for(int i = 0; i < itens; i++) candidates[i] = { peso[i] == 0 ? 1e9+lucro[i] : lucro[i]/peso[i] , i};
     sort(candidates.rbegin(), candidates.rend());
     
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing > 50){
+        int OLD = best;
         iter++;
         
         bitset<1000> includedItems;
@@ -139,6 +142,9 @@ int GRASP(){
         }
 
         agora = chrono::high_resolution_clock::now();
+
+        if(best == OLD) iterationsWithoutIncreasing++;
+        else iterationsWithoutIncreasing = 0;
     }
 
     cout << best << ' ' << iter << endl;

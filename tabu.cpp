@@ -26,10 +26,12 @@ const int tabuListMaxSize = 10000;
 
 const double tempoLimite = 0.5;
 
+int iterationsWithoutIncreasing = 0;
+
 //Função meta-heurística
 
 int TABU(){
-    
+
     //Will be used to xor hash tabu list
     
     uniform_int_distribution<ll> uid(0, 1LL<<60);
@@ -96,7 +98,8 @@ int TABU(){
 
     int iter = 0;
 
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing > 50){
+        int OLD = best;
         pair<int,int> currBest = {-1e9,-1e9};
         iter++;
 
@@ -161,6 +164,9 @@ int TABU(){
         }
 
         agora = chrono::high_resolution_clock::now();
+
+        if(best == OLD) iterationsWithoutIncreasing++;
+        else iterationsWithoutIncreasing = 0;
     }
 
     cout << iter << ' ' << std::chrono::duration<double>(agora - start).count() << endl;

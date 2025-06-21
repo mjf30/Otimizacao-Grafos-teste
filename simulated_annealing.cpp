@@ -26,6 +26,8 @@ const double tempoLimite = 0.5;
 const double alpha = 0.9999;
 const double _div = INT_MAX;
 
+int iterationsWithoutIncreasing = 0;
+
 mt19937 rng((int) std::chrono::steady_clock::now().time_since_epoch().count());
 
 int Simulated_Annealing(){
@@ -52,7 +54,8 @@ int Simulated_Annealing(){
 
     auto agora = chrono::high_resolution_clock::now();
     // // while(temperature > 1e-7){
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && temperature > 1.5){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && temperature > 1.5 && iterationsWithoutIncreasing > 70){
+        int OLD = best;
         bool ok = true;
         while(ok && temperature > 1.5){
             int itemFlip = uid(rng)%itens;
@@ -110,6 +113,9 @@ int Simulated_Annealing(){
         GetTemperature();
         agora = chrono::high_resolution_clock::now();
         //cout << (std::chrono::duration<double>(agora - start)).count() << endl;
+
+        if(best == OLD) iterationsWithoutIncreasing++;
+        else iterationsWithoutIncreasing = 0;
     }
     
     // cout << best << endl;
