@@ -1,11 +1,15 @@
 {
     "files.associations": {
+        ".fantomasignore": "ignore",
         "iostream": "cpp",
         "iosfwd": "cpp",
         "string": "cpp",
         "__bit_reference": "cpp",
         "__split_buffer": "cpp",
         "filesystem": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "bitset": "cpp",
+        "chrono": "cpp",
+        "ostream": "cpp"
     }
 }
