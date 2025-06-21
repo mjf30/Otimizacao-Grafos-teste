@@ -21,7 +21,7 @@ vector<vector<int> > conju; //Lista de conjunto que o item i pertence (conj[i] =
 vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do conjunto i
 
 
-//Função meta heuristica
+//Função meta-heurística
 const double tempoLimite = 0.5;
 const double alpha = 0.9999;
 const double _div = INT_MAX;

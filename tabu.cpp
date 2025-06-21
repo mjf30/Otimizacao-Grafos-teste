@@ -21,7 +21,7 @@ vector<vector<int> > conju; //Lista de conjunto que o item i pertence (conj[i] =
 vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do conjunto i
 
 
-//Função meta heuristica
+//Função meta-heurística
 
 int TABU(){
     int sol;
