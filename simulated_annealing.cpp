@@ -1,4 +1,4 @@
-#include "bits/stdc++.h"
+//#include "bits/stdc++.h"
 #include <iostream>
 #include <fstream>     
 #include <string>      
@@ -101,7 +101,7 @@ int Simulated_Annealing(){
             best = max(best, novoLucro);
 
             if(delta < 0){
-                cout << exp((delta)/temperature) << endl;
+                //cout << exp((delta)/temperature) << endl;
             }
 
             if(delta > 0 || (uid(rng) / _div) < exp((delta)/temperature)){
@@ -132,82 +132,65 @@ int Simulated_Annealing(){
 
         GetTemperature();
         agora = chrono::high_resolution_clock::now();
-        cout << (std::chrono::duration<double>(agora - start)).count() << endl;
+        //cout << (std::chrono::duration<double>(agora - start)).count() << endl;
     }
 
     return best;
 }
 
-signed main(){
-    //Leitura dos arquivos
-    const int cenarios = 4;
-    vector<string> pasta_tipos = {"correlated_sc", "fully_correlated_sc", "not_correlated_sc"};
-    vector<string> pasta_tamanho = {"300","500","700","800","1000"};
+int main(int argc, char* argv[]){
+    if (argc != 3) {
+        std::cerr << "Falta algumentos";
+        return 1; 
+    }
+    string dir_entrada = argv[1];
+    string dir_saida = argv[2];
 
-    for (int s_pasta = 1; s_pasta <= cenarios; s_pasta++) {
-        for (const auto& ss_pasta : pasta_tipos) {
-            for(const auto& sss_pasta : pasta_tamanho){   
-                const int total_arquivos = 10;
-                vector<int> solucao(total_arquivos);
-                vector<double>tempos(total_arquivos);
+    //Abre arquivo de entrada
+    ifstream arquivo(dir_entrada);
+    if (!(arquivo.is_open())) {
+        cout << "Erro ao abrir o arquivo: " << dir_entrada << endl;
+        return -1;
+    }
 
-                for(int i = 1; i <= total_arquivos; i++){
+    //Início da leitura
+    //cout << "Estou lendo o arquivo:" << dir_entrada << endl;
+    arquivo >> itens >> quant_conj >> capacidade;
+    lucro.assign(itens,0);peso.assign(itens,0);
+    
+    for(int j = 0; j < itens; j++) arquivo >> lucro[j];
+    for(int j = 0; j < itens; j++) arquivo >> peso[j];
 
-                    string diretorio_arquivo = "instances/scenario"+to_string(s_pasta)+"/"+ss_pasta+to_string(s_pasta)+"/"+sss_pasta+"/"+"kpfs_" + to_string(i)+ ".txt";
-                    ifstream arquivo(diretorio_arquivo);
-                    if (!(arquivo.is_open())) {
-                        //Cenário 1, correlated,500, kpfs_2 não existe
-                        if(diretorio_arquivo == "instances/scenario1/correlated_sc1/500/kpfs_2.txt") continue;
-                        cout << "Erro ao abrir o arquivo: " << diretorio_arquivo << endl;continue;
-                    }
+    conju.assign(itens,vector<int>()); 
+    inf_conj.assign(quant_conj,make_pair(0,0));
 
-                    //Início da leitura
-                    //cout << "Estou lendo o arquivo:" << diretorio_arquivo << endl;
-                    arquivo >> itens >> quant_conj >> capacidade;
-                    lucro.assign(itens,0);peso.assign(itens,0);
-                    
-                    for(int j = 0; j < itens; j++) arquivo >> lucro[j];
-                    for(int j = 0; j < itens; j++) arquivo >> peso[j];
-        
-                    conju.assign(itens,vector<int>()); 
-                    inf_conj.assign(quant_conj,make_pair(0,0));
+    for(int j = 0; j < quant_conj; j++){
+        int lim_conj, penalidade_conj, itens_conj;
+        arquivo >> lim_conj >> penalidade_conj >> itens_conj;
+        inf_conj[j].first = lim_conj; 
+        inf_conj[j].second = penalidade_conj;
 
-                    for(int j = 0; j < quant_conj; j++){
-                        int lim_conj, penalidade_conj, itens_conj;
-                        arquivo >> lim_conj >> penalidade_conj >> itens_conj;
-                        inf_conj[j].first = lim_conj; 
-                        inf_conj[j].second = penalidade_conj;
-        
-                        for(int k = 0; k < itens_conj; k++){
-                            int item; arquivo >> item;
-                            conju[item].push_back(j);
-                        }
-                    }
-                    //Fim na leitura
-
-                    //Calcular o tempo e solução
-                    auto start = chrono::high_resolution_clock::now();
-                    int sol = Simulated_Annealing();
-                    auto end = chrono::high_resolution_clock::now();
-                    chrono::duration<double> time = end - start;
-                    double execution_time = time.count();
-                    solucao[i-1] = sol;
-                    tempos[i-1] = execution_time;
-                }
-                
-                //Cout com resultados
-                string metaHeuristica = "SIMULATEANNEALING";
-                string diretorio_saida = "resultados/"+metaHeuristica+"/"+ss_pasta+"/kpfs_saida_"+sss_pasta+"_"+to_string(s_pasta)+".txt";
-                ofstream out(diretorio_saida);
-                if (out.is_open()) {
-                    for(int i = 0; i < total_arquivos; i++) out << solucao[i] << " ";
-                    out << '\n';
-                    for(int i = 0; i < total_arquivos;i++) out << tempos[i] << " ";
-                } else {
-                    cerr << "Erro ao criar arquivo de saída." << endl;
-                }
-            }
+        for(int k = 0; k < itens_conj; k++){
+            int item; arquivo >> item;
+            conju[item].push_back(j);
         }
     }
+    //Fim na leitura
+
+    //Calcular o tempo e solução
+    auto start = chrono::high_resolution_clock::now();
+    int sol = Simulated_Annealing();
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> time = end - start;
+    double execution_time = time.count();
+
+    //Abre arquivo de saída
+    ofstream saida_arquivo(dir_saida,ios::app);
+    if (!saida_arquivo.is_open()) {
+        cout << "Erro ao abrir " << dir_saida << " para escrita.\n";
+        return 1;
+    }
+    saida_arquivo << sol << " " << execution_time << '\n';
+    saida_arquivo.close();
     return 0;
 }
