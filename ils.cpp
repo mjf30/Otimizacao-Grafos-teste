@@ -22,7 +22,7 @@ vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do c
 
 mt19937_64 rng((int) std::chrono::steady_clock::now().time_since_epoch().count());
 
-const double tempoLimite = 0.5;
+const double tempoLimite = 0.6;
 double alpha = 0.7;
 
 int iterationsWithoutIncreasing = 0;
@@ -169,7 +169,7 @@ int ILS(){
 
     iter = 0;
 
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing < 150){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing < 250){
         int OLD = best;
         iter++;
 

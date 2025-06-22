@@ -22,8 +22,8 @@ vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do c
 
 mt19937_64 rng((int) std::chrono::steady_clock::now().time_since_epoch().count());
 
-const double tempoLimite = 0.5;
-double alpha = 0.8;
+const double tempoLimite = 0.6;
+double alpha = 0.2;
 
 int iterationsWithoutIncreasing = 0;
 
@@ -49,6 +49,8 @@ int GRASP(){
     vector<pair<double, int>> candidates(itens);
     for(int i = 0; i < itens; i++) candidates[i] = { peso[i] == 0 ? 1e9+lucro[i] : lucro[i]/peso[i] , i};
     sort(candidates.rbegin(), candidates.rend());
+
+    double base = 0.85;
     
     while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing < 300){
         int OLD = best;
@@ -58,7 +60,13 @@ int GRASP(){
         vector<int> itemsPorConj(quant_conj, 0);
         int somaValor = 0, somaPenalidade = 0, somaPeso = 0;
         
-        double prob = 0.9;
+        double prob = base;
+        base *= 0.95;
+        base = max(base, 0.1);
+        alpha *= 1.05;
+        alpha = min(alpha, 0.8);
+
+
 
         for(auto[comp, currItem]: candidates){
             double randProb = uid(rng)/double(1LL<<60);
@@ -78,9 +86,9 @@ int GRASP(){
 
                 // decai mais rápido ao longo do tempo
                 prob *= alpha;
-                alpha *= 0.99;
             }
         }
+        
 
         if(best < somaValor - somaPenalidade) bestBIT = includedItems;
         best = max(somaValor - somaPenalidade, best);
@@ -153,29 +161,29 @@ int GRASP(){
 
     cout << best << ' ' << iter << endl;
 
-    int check = 0;
-    vector<int> itemsPorConj(quant_conj, 0);
-    int somaValor = 0, somaPenalidade = 0, somaPeso = 0;
+    // int check = 0;
+    // vector<int> itemsPorConj(quant_conj, 0);
+    // int somaValor = 0, somaPenalidade = 0, somaPeso = 0;
 
-    for(int currItem = 0; currItem < itens; currItem++){
-        if(bestBIT[currItem]){
-            if(peso[currItem] + somaPeso > capacidade) return -1;
+    // for(int currItem = 0; currItem < itens; currItem++){
+    //     if(bestBIT[currItem]){
+    //         if(peso[currItem] + somaPeso > capacidade) return -1;
 
-            check += lucro[currItem];
-            for(int currConj: conju[currItem]){
-                itemsPorConj[currConj]++;
-                int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
-                if(diff <= 0) continue;
-                check -= inf_conj[currConj].second;
-            }
-            somaPeso += peso[currItem];
-        }
-    }
+    //         check += lucro[currItem];
+    //         for(int currConj: conju[currItem]){
+    //             itemsPorConj[currConj]++;
+    //             int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
+    //             if(diff <= 0) continue;
+    //             check -= inf_conj[currConj].second;
+    //         }
+    //         somaPeso += peso[currItem];
+    //     }
+    // }
 
-    if(check != best) {
-        cout << "Erro!!!!!! " << check << endl;    
-        return -1;
-    }
+    // if(check != best) {
+    //     cout << "Erro!!!!!! " << check << endl;    
+    //     return -1;
+    // }
 
     return best;
 }

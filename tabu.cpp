@@ -24,7 +24,7 @@ mt19937_64 rng((int) std::chrono::steady_clock::now().time_since_epoch().count()
 
 const int tabuListMaxSize = 10000;
 
-const double tempoLimite = 0.5;
+const double tempoLimite = 0.6;
 double alpha = 0.8;
 
 int iterationsWithoutIncreasing = 0;
@@ -130,12 +130,13 @@ int TABU(){
 
     int iter = 0;
 
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing < 400){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing < 300){
         int OLD = best;
         pair<int,int> currBest = {-1e9,-1e9};
         iter++;
 
         for(int itemFlip = 0; itemFlip < itens; itemFlip++){
+            if(std::chrono::duration<double>(agora - start).count() > tempoLimite) break;
             ll novaHash = currHash ^ rndVal[itemFlip];
             if(tabulist.find(novaHash) != tabulist.end()) {continue;}
             
