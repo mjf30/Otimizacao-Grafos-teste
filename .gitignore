@@ -1,0 +1,13 @@
+# Ignore compiled binaries
+grasp
+ils
+tabu
+simulated_annealing
+leitura_exec
+
+# Ignore results and datasets
+resultados/
+instances.zip
+
+# Ignore editor config
+.vscode/
