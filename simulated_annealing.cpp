@@ -23,7 +23,7 @@ vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do c
 
 //Função meta-heurística
 const double tempoLimite = 0.5;
-const double alpha = 0.99999999;
+const double alpha = 0.995;
 const double _div = INT_MAX;
 
 int iterationsWithoutIncreasing = 0;
@@ -44,20 +44,20 @@ int Simulated_Annealing(){
 
     int best = somaValor - somaPenalidade;
 
-    double temperature = 1e5;
+    double temperature = 1e4;
 
     auto GetTemperature = [&](){
-        temperature = max(temperature*alpha, 1.5);
+        temperature = temperature *= alpha;
     };
 
     auto start = chrono::high_resolution_clock::now();
 
     auto agora = chrono::high_resolution_clock::now();
     // // while(temperature > 1e-7){
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && temperature > 1.5 && iterationsWithoutIncreasing < 100000){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite){
         int OLD = best;
         bool ok = true;
-        while(ok && temperature > 1.5){
+        while(ok){
             int itemFlip = uid(rng)%itens;
             int novoLucro = somaValor - somaPenalidade;
             if(includedItems[itemFlip]){
