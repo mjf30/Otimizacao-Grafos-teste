@@ -23,14 +23,16 @@ vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do c
 mt19937_64 rng((int) std::chrono::steady_clock::now().time_since_epoch().count());
 
 const double tempoLimite = 0.5;
-double alpha = 0.7;
+double alpha = 0.8;
 
 int iterationsWithoutIncreasing = 0;
+
+bitset<1000> bestBIT;
 
 //Função meta-heurística
 
 int GRASP(){
-
+    iterationsWithoutIncreasing = 0;
     uniform_int_distribution<ll> uid(0, 1LL<<60);
 
     
@@ -48,7 +50,7 @@ int GRASP(){
     for(int i = 0; i < itens; i++) candidates[i] = { peso[i] == 0 ? 1e9+lucro[i] : lucro[i]/peso[i] , i};
     sort(candidates.rbegin(), candidates.rend());
     
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing > 50){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing < 300){
         int OLD = best;
         iter++;
         
@@ -56,12 +58,7 @@ int GRASP(){
         vector<int> itemsPorConj(quant_conj, 0);
         int somaValor = 0, somaPenalidade = 0, somaPeso = 0;
         
-        
-        // Algoritmo construtivo que utiliza métrica gulosa lucro/peso
-        
         double prob = 0.9;
-
-        int cnt = 0, cnt2 = 0;;
 
         for(auto[comp, currItem]: candidates){
             double randProb = uid(rng)/double(1LL<<60);
@@ -81,10 +78,11 @@ int GRASP(){
 
                 // decai mais rápido ao longo do tempo
                 prob *= alpha;
-                alpha *= 0.9;
+                alpha *= 0.99;
             }
         }
 
+        if(best < somaValor - somaPenalidade) bestBIT = includedItems;
         best = max(somaValor - somaPenalidade, best);
 
         // Hill climbing para achar máximo local
@@ -95,7 +93,7 @@ int GRASP(){
             if(includedItems[itemFlip]){
                 novoLucro -= lucro[itemFlip];
                 for(int currConj: conju[itemFlip]){
-                    int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                    int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                     if(diff <= 0) continue;
                     novoLucro += inf_conj[currConj].second;
                 }
@@ -111,7 +109,8 @@ int GRASP(){
             }
 
             int delta = novoLucro - (somaValor - somaPenalidade);
-            best = max(best, novoLucro);
+            // best = max(best, novoLucro);
+            
 
             // cout << novoLucro << endl;
             // return novoLucro;
@@ -122,9 +121,10 @@ int GRASP(){
                     somaPeso -= peso[itemFlip];
                     somaValor -= lucro[itemFlip];
                     for(int currConj: conju[itemFlip]){
+                        itemsPorConj[currConj]--;
                         int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
                         if(diff <= 0) continue;
-                        somaPenalidade += inf_conj[currConj].second;
+                        somaPenalidade -= inf_conj[currConj].second;
                     }
                 }
                 else{
@@ -132,13 +132,17 @@ int GRASP(){
                     somaPeso += peso[itemFlip];
                     somaValor += lucro[itemFlip];
                     for(int currConj: conju[itemFlip]){
-                        int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                        itemsPorConj[currConj]++;
+                        int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                         if(diff <= 0) continue;
-                        somaPenalidade -= inf_conj[currConj].second;
+                        somaPenalidade += inf_conj[currConj].second;
                     }
                 }
             }
             else continue;
+
+            if(best < somaValor - somaPenalidade) bestBIT = includedItems;
+            best = max(best, somaValor - somaPenalidade);
         }
 
         agora = chrono::high_resolution_clock::now();
@@ -148,6 +152,30 @@ int GRASP(){
     }
 
     cout << best << ' ' << iter << endl;
+
+    int check = 0;
+    vector<int> itemsPorConj(quant_conj, 0);
+    int somaValor = 0, somaPenalidade = 0, somaPeso = 0;
+
+    for(int currItem = 0; currItem < itens; currItem++){
+        if(bestBIT[currItem]){
+            if(peso[currItem] + somaPeso > capacidade) return -1;
+
+            check += lucro[currItem];
+            for(int currConj: conju[currItem]){
+                itemsPorConj[currConj]++;
+                int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
+                if(diff <= 0) continue;
+                check -= inf_conj[currConj].second;
+            }
+            somaPeso += peso[currItem];
+        }
+    }
+
+    if(check != best) {
+        cout << "Erro!!!!!! " << check << endl;    
+        return -1;
+    }
 
     return best;
 }

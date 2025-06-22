@@ -25,12 +25,14 @@ mt19937_64 rng((int) std::chrono::steady_clock::now().time_since_epoch().count()
 const int tabuListMaxSize = 10000;
 
 const double tempoLimite = 0.5;
+double alpha = 0.8;
 
 int iterationsWithoutIncreasing = 0;
 
 //Função meta-heurística
 
 int TABU(){
+    iterationsWithoutIncreasing = 0;
 
     //Will be used to xor hash tabu list
     
@@ -52,26 +54,52 @@ int TABU(){
 
     shuffle(perm.begin(), perm.end(), rng);
 
-    for(int currItem: perm){
-        int incluso = uid(rng)%60;
+    // O tabu não tem solução
 
-        if(currItem >= itens) return -1;
+    // for(int currItem: perm){     
+    //     int incluso = uid(rng)%60;
 
-        if(incluso == 1){
-            if(peso[currItem] + somaPeso > capacidade) continue;
-            int nValor = somaValor, nPenalidade = somaPenalidade;
-            nValor += lucro[currItem];
-            for(int currConj: conju[currItem]){
-                int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
-                if(diff <= 0) continue;
-                nPenalidade += inf_conj[currConj].second;
-            }
+    //     if(currItem >= itens) return -1;
+
+    //     if(incluso == 1){
+    //         if(peso[currItem] + somaPeso > capacidade) continue;
+    //         int nValor = somaValor, nPenalidade = somaPenalidade;
+    //         nValor += lucro[currItem];
+    //         for(int currConj: conju[currItem]){
+    //             int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+    //             if(diff <= 0) continue;
+    //             nPenalidade += inf_conj[currConj].second;
+    //         }
             
-            if(somaValor - somaPenalidade > nValor - nPenalidade) {  // não quero pegar solução inicial muito ruim
-                continue;
-            }
+    //         if(somaValor - somaPenalidade > nValor - nPenalidade) {  // não quero pegar solução inicial muito ruim
+    //             continue;
+    //         }
 
-            currHash ^= rndVal[currItem];
+    //         currHash ^= rndVal[currItem];
+
+    //         somaValor += lucro[currItem];
+    //         includedItems[currItem] = 1;
+    //         for(int currConj: conju[currItem]){
+    //             itemsPorConj[currConj]++;
+    //             int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
+    //             if(diff <= 0) continue;
+    //             somaPenalidade += inf_conj[currConj].second;
+    //         }
+    //         somaPeso += peso[currItem];
+    //     }
+    // }
+
+    vector<pair<double, int>> candidates(itens);
+    for(int i = 0; i < itens; i++) candidates[i] = { peso[i] == 0 ? 1e9+lucro[i] : lucro[i]/peso[i] , i};
+    sort(candidates.rbegin(), candidates.rend());
+
+    double prob = 0.8;
+
+    for(auto[comp, currItem]: candidates){
+        double randProb = uid(rng)/double(1LL<<60);
+        
+        if(randProb < prob){
+            if(peso[currItem] + somaPeso > capacidade) continue;
 
             somaValor += lucro[currItem];
             includedItems[currItem] = 1;
@@ -82,6 +110,10 @@ int TABU(){
                 somaPenalidade += inf_conj[currConj].second;
             }
             somaPeso += peso[currItem];
+
+            // decai mais rápido ao longo do tempo
+            prob *= alpha;
+            alpha *= 0.2;
         }
     }
 
@@ -98,7 +130,7 @@ int TABU(){
 
     int iter = 0;
 
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing > 50){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing < 400){
         int OLD = best;
         pair<int,int> currBest = {-1e9,-1e9};
         iter++;
@@ -111,7 +143,7 @@ int TABU(){
             if(includedItems[itemFlip]){
                 novoLucro -= lucro[itemFlip];
                 for(int currConj: conju[itemFlip]){
-                    int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                    int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                     if(diff <= 0) continue;
                     novoLucro += inf_conj[currConj].second;
                 }
@@ -147,9 +179,10 @@ int TABU(){
             somaPeso -= peso[itemFlip];
             somaValor -= lucro[itemFlip];
             for(int currConj: conju[itemFlip]){
+                itemsPorConj[currConj]--;
                 int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
                 if(diff <= 0) continue;
-                somaPenalidade += inf_conj[currConj].second;
+                somaPenalidade -= inf_conj[currConj].second;
             }
         }
         else{
@@ -157,9 +190,10 @@ int TABU(){
             somaPeso += peso[itemFlip];
             somaValor += lucro[itemFlip];
             for(int currConj: conju[itemFlip]){
-                int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                itemsPorConj[currConj]++;
+                int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                 if(diff <= 0) continue;
-                somaPenalidade -= inf_conj[currConj].second;
+                somaPenalidade += inf_conj[currConj].second;
             }
         }
 

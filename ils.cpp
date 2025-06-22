@@ -30,6 +30,7 @@ int iterationsWithoutIncreasing = 0;
 //Função meta-heurística
 
 int ILS(){
+    iterationsWithoutIncreasing = 0;
     uniform_int_distribution<ll> uid(0, 1LL<<60);
 
     
@@ -94,7 +95,7 @@ int ILS(){
             if(includedItems[itemFlip]){
                 novoLucro -= lucro[itemFlip];
                 for(int currConj: conju[itemFlip]){
-                    int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                    int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                     if(diff <= 0) continue;
                     novoLucro += inf_conj[currConj].second;
                 }
@@ -118,9 +119,10 @@ int ILS(){
                     somaPeso -= peso[itemFlip];
                     somaValor -= lucro[itemFlip];
                     for(int currConj: conju[itemFlip]){
+                        itemsPorConj[currConj]--;
                         int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
                         if(diff <= 0) continue;
-                        somaPenalidade += inf_conj[currConj].second;
+                        somaPenalidade -= inf_conj[currConj].second;
                     }
                 }
                 else{
@@ -128,9 +130,10 @@ int ILS(){
                     somaPeso += peso[itemFlip];
                     somaValor += lucro[itemFlip];
                     for(int currConj: conju[itemFlip]){
-                        int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                        itemsPorConj[currConj]++;
+                        int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                         if(diff <= 0) continue;
-                        somaPenalidade -= inf_conj[currConj].second;
+                        somaPenalidade += inf_conj[currConj].second;
                     }
                 }
             }
@@ -166,7 +169,7 @@ int ILS(){
 
     iter = 0;
 
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing > 50){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && iterationsWithoutIncreasing < 150){
         int OLD = best;
         iter++;
 
@@ -184,9 +187,10 @@ int ILS(){
                 somaPeso -= peso[itemFlip];
                 somaValor -= lucro[itemFlip];
                 for(int currConj: conju[itemFlip]){
+                    itemsPorConj[currConj]--;
                     int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
                     if(diff <= 0) continue;
-                    somaPenalidade += inf_conj[currConj].second;
+                    somaPenalidade -= inf_conj[currConj].second;
                 }
             }
             else{
@@ -195,9 +199,10 @@ int ILS(){
                 somaPeso += peso[itemFlip];
                 somaValor += lucro[itemFlip];
                 for(int currConj: conju[itemFlip]){
-                    int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                    itemsPorConj[currConj]++;
+                    int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                     if(diff <= 0) continue;
-                    somaPenalidade -= inf_conj[currConj].second;
+                    somaPenalidade += inf_conj[currConj].second;
                 }
             }
         }
@@ -212,7 +217,7 @@ int ILS(){
             if(ilsItems[itemFlip]){
                 novoLucro -= lucro[itemFlip];
                 for(int currConj: conju[itemFlip]){
-                    int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                    int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                     if(diff <= 0) continue;
                     novoLucro += inf_conj[currConj].second;
                 }
@@ -236,9 +241,10 @@ int ILS(){
                     somaPeso -= peso[itemFlip];
                     somaValor -= lucro[itemFlip];
                     for(int currConj: conju[itemFlip]){
+                        itemsPorConj[currConj]--;
                         int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
                         if(diff <= 0) continue;
-                        somaPenalidade += inf_conj[currConj].second;
+                        somaPenalidade -= inf_conj[currConj].second;
                     }
                 }
                 else{
@@ -246,9 +252,10 @@ int ILS(){
                     somaPeso += peso[itemFlip];
                     somaValor += lucro[itemFlip];
                     for(int currConj: conju[itemFlip]){
-                        int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                        itemsPorConj[currConj]++;
+                        int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                         if(diff <= 0) continue;
-                        somaPenalidade -= inf_conj[currConj].second;
+                        somaPenalidade += inf_conj[currConj].second;
                     }
                 }
             }

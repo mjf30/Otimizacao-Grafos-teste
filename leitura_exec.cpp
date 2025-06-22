@@ -12,7 +12,7 @@ int main(){
     string c_cod[] = {"simulated_annealing", "tabu", "grasp", "ils"};
     // cod = "simulated_annealing";
     // cod = "tabu";
-    // cod = "grasp";
+    // string c_cod[] = {"grasp"};
     // cod = "ils";
 
     //Compilar

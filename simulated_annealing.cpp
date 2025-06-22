@@ -23,7 +23,7 @@ vector<pair<int,int> > inf_conj;//(Limite de itens na solução,Penalidade) do c
 
 //Função meta-heurística
 const double tempoLimite = 0.5;
-const double alpha = 0.9999;
+const double alpha = 0.99999999;
 const double _div = INT_MAX;
 
 int iterationsWithoutIncreasing = 0;
@@ -33,6 +33,7 @@ mt19937 rng((int) std::chrono::steady_clock::now().time_since_epoch().count());
 int Simulated_Annealing(){
 
     bitset<1000> includedItems;
+    iterationsWithoutIncreasing = 0;
 
     int somaValor = 0, somaPenalidade = 0, somaPeso = 0;
     vector<int> itemsPorConj(quant_conj, 0);
@@ -42,19 +43,18 @@ int Simulated_Annealing(){
     // aqui começa o algoritmo
 
     int best = somaValor - somaPenalidade;
-    cout << best << endl;
 
-    double temperature = 1e4;
+    double temperature = 1e5;
 
     auto GetTemperature = [&](){
-        temperature = max(temperature*alpha, 1e-3);
+        temperature = max(temperature*alpha, 1.5);
     };
 
     auto start = chrono::high_resolution_clock::now();
 
     auto agora = chrono::high_resolution_clock::now();
     // // while(temperature > 1e-7){
-    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && temperature > 1.5 && iterationsWithoutIncreasing > 70){
+    while((std::chrono::duration<double>(agora - start)).count() < tempoLimite && temperature > 1.5 && iterationsWithoutIncreasing < 100000){
         int OLD = best;
         bool ok = true;
         while(ok && temperature > 1.5){
@@ -63,7 +63,7 @@ int Simulated_Annealing(){
             if(includedItems[itemFlip]){
                 novoLucro -= lucro[itemFlip];
                 for(int currConj: conju[itemFlip]){
-                    int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                    int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                     if(diff <= 0) continue;
                     novoLucro += inf_conj[currConj].second;
                 }
@@ -90,9 +90,10 @@ int Simulated_Annealing(){
                     somaPeso -= peso[itemFlip];
                     somaValor -= lucro[itemFlip];
                     for(int currConj: conju[itemFlip]){
+                        itemsPorConj[currConj]--;
                         int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
                         if(diff <= 0) continue;
-                        somaPenalidade += inf_conj[currConj].second;
+                        somaPenalidade -= inf_conj[currConj].second;
                     }
                 }
                 else{
@@ -100,9 +101,10 @@ int Simulated_Annealing(){
                     somaPeso += peso[itemFlip];
                     somaValor += lucro[itemFlip];
                     for(int currConj: conju[itemFlip]){
-                        int diff = itemsPorConj[currConj]+1 - inf_conj[currConj].first;
+                        itemsPorConj[currConj]++;
+                        int diff = itemsPorConj[currConj] - inf_conj[currConj].first;
                         if(diff <= 0) continue;
-                        somaPenalidade -= inf_conj[currConj].second;
+                        somaPenalidade += inf_conj[currConj].second;
                     }
                 }
                 ok = false;
@@ -118,7 +120,7 @@ int Simulated_Annealing(){
         else iterationsWithoutIncreasing = 0;
     }
     
-    // cout << best << endl;
+    cout << best << ' ' << temperature << endl;
     // cout << "Terminou uma iteração! " << (std::chrono::duration<double>(agora - start)).count() << endl;
     return best;
 }
@@ -128,7 +130,6 @@ int main(int argc, char* argv[]){
         std::cerr << "Falta algumentos";
         return 1; 
     }
-    cout << "Entrou!" << endl;
     string dir_entrada = argv[1];
     string dir_saida = argv[2];
 
