@@ -1,0 +1,9 @@
+# Build artifacts
+*.o
+
+# Executable binaries
+grasp
+ils
+leitura_exec
+simulated_annealing
+tabu
